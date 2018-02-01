@@ -33,7 +33,7 @@ print("0-1: " + str(t0))
 print("1-2: " + str(t1))
 print("2-3: " + str(t2))
 print("3-4: " + str(t3))
-
+#########################
 
 # Problem 2: do a for loop
 
@@ -54,18 +54,20 @@ for i in range(years):
     # births
     t0 = (t1 * m1) + (t2 * m2) + (t3 * m3)
 
-    #overwrite starting population for next year
+    # overwrite starting population for next year
     n0 = t0
     n1 = t1
     n2 = t2
     n3 = t3
 
-    #print results of every year
+    # print results of every year
     print("\nYear " + str(i+1))
     print("0-1: " + str(n0))
     print("1-2: " + str(n1))
     print("2-3: " + str(n2))
     print("3-4: " + str(n3))
+    print("Total: " + str(n0+n1+n2+n3))
+############################
 
 # problem 3: re-run with m2 = .9
 
@@ -88,15 +90,16 @@ for i in range(years):
     # births
     t0 = (t1 * m1) + (t2 * m2) + (t3 * m3)
 
-    #overwrite starting population
+    # overwrite starting population
     n0 = t0
     n1 = t1
     n2 = t2
     n3 = t3
 
-    #print results of every year
+    # print results of every year
     print("\nYear " + str(i+1))
     print("0-1: " + str(n0))
     print("1-2: " + str(n1))
     print("2-3: " + str(n2))
     print("3-4: " + str(n3))
+    print("Total: " + str(n0+n1+n2+n3))
