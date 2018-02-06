@@ -14,31 +14,31 @@ C5 = 22
 
 classes = [C1, C2, C3, C4, C5]
 
-#birth rates
+# birth rates
 m = np.repeat([0, 0.42, 3.5, 4.3, 4.8], classes)
 
-#survival rates
+# survival rates
 p = np.repeat([0.76, 0.84, 0.92, 0.95, 0.96], classes)
 
-#initial population
+# initial population
 n = np.repeat([0, 100/C2, 200/C3, 400/C4, 500/C5], classes)
 
 years = 5
 
 # Run Simulation
-## initialize n_next
+# initialize n_next
 n_next = n
 for i in range(years):
-    #calculate survival into next age class
+    # calculate survival into next age class
     n_next[1: ] = n[ :-1] * p[ :-1]
 
-    #calculate pulsed births
+    # calculate pulsed births
     n_next[0] = np.dot(n_next[1: ], m[1: ])
 
-    #overwrite n
-    n = n_next
+    # overwrite n
+    n = n_next.copy # must explicitly copy.  Python makes an alias by default.
 
-    #Display current population
+    # Display current population
     print("\nPopulation at year", str(i+1))
     print("0-7 years: ", str(sum(n[0:7])))
     print("7-14 years: ", str(sum(n[7:15])))
