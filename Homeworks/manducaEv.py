@@ -6,11 +6,11 @@ import numpy as np
 import random
 import manducaFitness
 
-#random.seed(55)
-#np.random.seed(55)
+#random.seed(555)
+#np.random.seed(555)
 
 MUSCLE_ON = 100
-MAX_MUTATIONS = 10
+MAX_MUTATIONS = 15
 
 # run_generation(pop, n_matings, n_mutations) runs one generation of a genetic
 # algorithm. It:
@@ -94,12 +94,15 @@ def run_generation(pop, n_matings, n_mutations):
     return new_pop
 
 # This is the function that you will (mostly) write yourself.
-def manducaEv(n_gen, pop_size, n_matings, n_mutations, seed):
+def manducaEv(n_gen, pop_size, n_matings, n_mutations, seed, download_path, save_data = False):
     # Seed the random-number generator so that we get the same "random"
     # numbers every time :-)
     random.seed(seed)
     np.random.seed(seed)
 
+    #if you want to save the fitness data, initialize a vector to hold it.
+    if save_data:
+        data = np.zeros(n_gen)
     # First create a population of random individuals.
     print("In manducaRun")
     pop = np.array(np.empty(pop_size), dtype=object)  # creates array to put manduca objects in.
@@ -111,10 +114,16 @@ def manducaEv(n_gen, pop_size, n_matings, n_mutations, seed):
     for i in range(n_gen):
         pop = run_generation (pop, n_matings, n_mutations)
         print('After generation #', i, '/', n_gen, ', best=', pop[0].fitness(), "\n")
+        if save_data:
+            data[i] = pop[0].fitness()
         if i % 20 == 0:
             print("Generation=", i, ", best=", pop[0])
 
     print("All done. Best=", pop[0])
+    if save_data:
+        print(data)
+        #download_path = "/Users/scottericr/PycharmProjects/python-modeling/Homeworks/manduca.csv"
+        np.savetxt(download_path, data, delimiter=",")
 
 # Build a random individual. Basically, every leg & every muscle is random.
 def random_manduca(n_time_seg=10):
@@ -189,8 +198,8 @@ class Manduca:
 
     def mutate(self):
         n_mutations = random.randrange(1, MAX_MUTATIONS)
-        print(str(n_mutations) + " mutations")
-        #decide how many are leg and which are muscle mutations
+        #print(str(n_mutations) + " mutations")
+        #decide how many are leg how many are muscle mutations
         n_leg = np.random.choice(n_mutations, 1)
         n_muscle = n_mutations - n_leg
 
@@ -199,9 +208,9 @@ class Manduca:
         while n < n_leg:
             row = random.randint(0, 9)
             col = random.randint(0, 4)
-            if self.legs[row, col] == 1.:
+            if self.legs[row, col] == 1:
                 self.legs[row, col] = 0
-            else:
+            if self.legs[row, col] == 0:
                 self.legs[row, col] = 1
             n = n+1
 
@@ -212,20 +221,34 @@ class Manduca:
             col = random.randint(0, 3)
             if self.muscles[row, col] == 100:
                 self.muscles[row, col] = 0
-            else:
+            if self.muscles[row, col] == 0:
                 self.muscles[row, col] = 100
             k = k+1
-
 
     # Pick entire rows from one parent or the other. Each row of the child comes
     # from the first parent or the second (with equal likelihood). 
     # This is the final function that you write yourself.
     def mate(self, parent2):
+        which_rows = np.random.choice(10, 5, replace=False)
+        child = Manduca(np.copy(self.legs), np.copy(self.muscles))
+        child.muscles[[which_rows], :] = parent2.muscles[[which_rows], :]
+        child.legs[which_rows, :] = parent2.legs[which_rows, :]
+        return child
 
 
-#manducaEv (n_gen=5000, pop_size=20, n_matings=10, n_mutations=10, seed=1)
-test = random_manduca(10)
-print(test)
-test2 = Manduca.copy(test)
-test2.mutate()
-print(test2)
+
+
+#manducaEv(n_gen=70, pop_size=20, n_matings=10, n_mutations=10, seed=33,
+#          save_data=True, download_path="/Users/scottericr/PycharmProjects/python-modeling/Homeworks/Manduca33.csv")
+
+#manducaEv(n_gen=70, pop_size=20, n_matings=10, n_mutations=10, seed=121,
+#          save_data=True, download_path="/Users/scottericr/PycharmProjects/python-modeling/Homeworks/Manduca121.csv")
+
+#manducaEv(n_gen=70, pop_size=20, n_matings=10, n_mutations=10, seed=9000,
+#          save_data=True, download_path="/Users/scottericr/PycharmProjects/python-modeling/Homeworks/Manduca9000.csv")
+
+manducaEv(n_gen=210, pop_size=20, n_matings=10, n_mutations=10, seed=9000,
+          save_data=True, download_path="/Users/scottericr/PycharmProjects/python-modeling/Homeworks/Manduca9000_210gen.csv")
+
+
+#read_from_file_and_graph("/Users/scottericr/PycharmProjects/python-modeling/Homeworks/Winner1.txt")
