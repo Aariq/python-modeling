@@ -4,15 +4,35 @@
 
 import random
 import numpy as np
-TIME_STEP = 1
-N_ECOLI=15
+import matplotlib
+matplotlib.use('TkAgg')
+#TIME_STEP = 1
+#N_ECOLI = 15
+#I edited chemotaxis() to take number of ecoli as an argument.
 
 class Ecoli:
     # You must write this function yourself.
     # Your instance variables must be (at a minimum) x, y, Vx, Vy and
     # concentration (i.e., the memory)
-    def __init__(self, x=None, y=None):
-        ...
+    def __init__(self, x = None, y = None):
+        #initiate with random location
+        #self.x = random.uniform(0, 100)
+        #self.y = random.uniform(0, 100)
+
+        #initiate at lower left
+        self.x = 0
+        self.y = 0
+
+        #and random direction (actually doesn't need to be random.  Chemotaxis() seeds random directions)
+        xdir = random.uniform(-1, 1)
+        ydir = random.uniform(-1, 1)
+        adj = 1 / ((xdir * xdir + ydir * ydir) ** .5)
+        self.Vx = xdir * adj
+        self.Vy = ydir * adj
+        #self.Vx, self.Vy = self.pick_random_direction() # could also do this, but then prints a string
+
+        #initiate sugar memory
+        self.sugar = sample(self.x, self.y)
 
         # OK, I wrote this part of __init__ for you. It prepares the [x,y]
         # locations on our path for swim() to update and display() to draw.
@@ -24,8 +44,8 @@ class Ecoli:
     # It uses the instance variables x, y, Vx and Vy.
     def __repr__(self):
         dist = ((self.x-50)**2 + (self.y-50)**2)**0.5
-        s="x,y=({:.2f},{:.2f}). Vx,Vy=({:.2f},{:.2f}) and distance={:.2f}"\
-            .format(self.x,self.y,self.Vx,self.Vy,dist)
+        s = "x, y = ({:.2f}, {:.2f}). Vx, Vy = ({:.2f}, {:.2f}), distance = {:.2f}, and local [sugar] = {:.4f}"\
+            .format(self.x, self.y, self.Vx, self.Vy, dist, sample(self.x, self.y))
         return s
 
     # Pick a random direction, and update our internal velocity vector (i.e.,
@@ -34,13 +54,22 @@ class Ecoli:
     # that Vx**2 + Vy**2 = 1.
     # This is for you to write.
     def pick_random_direction(self):
-        ...
+        # First pick the x and y components of the direction.
+        xdir = random.uniform(-1, 1)
+        ydir = random.uniform(-1, 1)
+
+        # Now normalize to have magnitude=1.
+        adj = 1 / ((xdir * xdir + ydir * ydir) ** .5)
+        print("new direction: x = {:.3f}, y = {:.3f}".format(xdir * adj, ydir * adj))
+        return (xdir * adj, ydir * adj)
 
     # Swim for one TIME_STEP at the current (Vx,Vy) direction,
     # and update the new x,y location.
-    # You must write this yourself.
-    def swim (self):
-        ...
+    # I've writen this to allow the user to specify how long Ecoli swims before
+    # re-evaluating it's direction (tstep)
+    def swim(self, tstep = 1):
+        self.x = self.x + self.Vx * tstep
+        self.y = self.y + self.Vy * tstep
 
         # OK, I wrote this part for you.
         self.saveX.append(self.x)
@@ -55,27 +84,34 @@ class Ecoli:
     # Why put these into a class member function? It helps us encapsulate the
     # inner workings of the class (things like the location, memory, etc) and
     # not let them be visible outside of the class.
-    def sampleAndTumble (self):
-        ...
+    def sampleAndTumble(self):
+        sugarnew = sample(self.x, self.y)
+        if sugarnew <= self.sugar:
+            self.Vx, self.Vy = self.pick_random_direction()
+        self.sugar = sugarnew
 
 # The routine that implements high-level chemotaxis
-def chemotaxis():
+# I edited this so the user can specify the total runtime of the simulation (t) and
+# how often the Ecoli swim between concentration checks (tstep).
+# t is passed on to self.swim()
+
+def chemotaxis(n, t=200, tstep=1):
     # Instantiate an array of E-coli objects. Pick the initial random direction
     # for each one.
     random.seed(0)
-    Es = np.empty (N_ECOLI, dtype=object)
-    for i in range(N_ECOLI):
+    Es = np.empty(n, dtype=object)
+    for i in range(n):
         Es[i] = Ecoli()
         Es[i].pick_random_direction()
-    # print ("Initially: ", Es)
+    print("Initially: ", Es)
 
     # Now for the main loop.
-    for i in range(200):		# for each timepoint...
-        for i,E in enumerate(Es):	#       for each Ecoli object...
-            # print ('EColi #', i, ':')
-            E.swim ()			# tell it to swim for a while
-            print (E)
-            # tell it to reevalute its direction and tumble if needed.
+    for i in range(t):		# for each timepoint...
+        for i,E in enumerate(Es):   # for each Ecoli object...
+            print('EColi #', i, ':')
+            E.swim(tstep)			# tell it to swim for a while
+            print(E)
+            # tell it to re-evaluate its direction and tumble if needed.
             E.sampleAndTumble()
 
     # plot the swarm's motion.
@@ -85,7 +121,7 @@ def chemotaxis():
 # Our field has sugar at x=50, y=50.
 # It then tails off slowly around that.
 def sample (x,y):
-    distance = (x-50)**2 + (y-50)**2	# Actually distance**2, but that's fine
+    distance = ((x-50)**2 + (y-50)**2) ** 0.5
     distance = max (distance, 1)	# To avoid /0 if x,y=(50,50)
     return (10/distance)		# So small distance => return big number
 
@@ -159,4 +195,4 @@ def per_frame(f):
 
     return pats		# Always return a list of the changed items.
 
-chemotaxis()
+chemotaxis(20, t=200, tstep=3)

@@ -10,32 +10,33 @@ TIME_STEP = 1
 # It is just an implementation of the algorithm we discussed in class.
 def chemotaxis():
     x = y = 0
-    concOld = sample (x,y)
+    concOld = sample(x, y)
     Vx, Vy = pick_random_direction()
-    print ("Initially: x=",x,', y=',y, ", conc=", concOld)
+    print("Initially: x =", x, ', y =', y, ", [sugar]=", concOld)
     for i in range(200):
-        x,y = swim (x,y, Vx, Vy)
-        concNew = sample (x,y)
-        print ("Swam to [{:.2f},{:.2f}], where distance={:.2f} and [sugar]={:f}".format (x,y,(x-50)**2 + (y-50)**2,concNew))
-        if (concNew <= concOld):
+        x, y = swim(x, y, Vx, Vy)
+        concNew = sample(x, y)
+        # The concentration of sugar is maximum at [50, 50], so that's why distance is (x-50)^2 + (y-50)^2
+        print("Swam to [{:.2f}, {:.2f}], where distance = {:.2f} and [sugar] = {:f}".format(x, y, (x-50)**2 + (y-50)**2, concNew))
+        if(concNew <= concOld):
             Vx, Vy = pick_random_direction()
         concOld = concNew
-display()
+    display()
 
 # Pick a random direction and return it.
 # The random direction is an (x,y) pair. It is always normalized such that
 # x*x + y*y = 1.
-# To be precise, we're picking a velocity vectory. However, the swimming speed
+# To be precise, we're picking a velocity vector. However, the swimming speed
 # will always be one, so we're really only picking the direction.
 def pick_random_direction():
     # First pick the x and y components of the direction.
-    x = random.uniform(-1,1)
-    y = random.uniform(-1,1)
+    x = random.uniform(-1, 1)
+    y = random.uniform(-1, 1)
 
     # Now normalize to have magnitude=1.
     adj = 1 / ((x*x + y*y)**.5)
-    print ("new direction: x={:.3f}, y={:.3f}".format(x*adj, y*adj))
-    return (x*adj, y*adj)
+    print("new direction: x = {:.3f}, y = {:.3f}".format(x*adj, y*adj))
+    return(x*adj, y*adj)
 
 # Swim for one TIME_STEP at Vx,Vy (which we got from pick_random_direction()),
 # and return the new x,y location.
@@ -43,19 +44,19 @@ def pick_random_direction():
 #        x,y = swim (x,y, Vx, Vy)
 # Note that swim() saves away the bacteria's path so that we can make an
 # animated movie later.
-def swim (x, y, Vx, Vy):
+def swim(x, y, Vx, Vy):
     x = x + Vx*TIME_STEP
     y = y + Vy*TIME_STEP
-    newPoint (x,y)	# save away the E.coli's path
-    return (x,y)
+    newPoint(x, y)	# save away the E.coli's path
+    return(x, y)
 
 # Return the sugar concentration at any [x,y] location.
 # Our field has sugar at x=50, y=50.
 # It then tails off slowly around that.
-def sample (x,y):
+def sample(x, y):
     distance = (x-50)**2 + (y-50)**2	# Actually distance**2, but that's fine
-    distance = max (distance, 1)	# To avoid /0 if x,y=(50,50)
-    return (10/distance)		# So small distance => return big number
+    distance = max(distance, 1)	# To avoid /0 if x,y=(50,50) returns whichever is bigger, distance or "1"
+    return(10/distance)		# So small distance => return big number
 
 ###############################################################
 # This part of the file deals with showing an animated movie of our chemotaxis.
