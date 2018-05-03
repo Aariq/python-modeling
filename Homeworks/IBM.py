@@ -1,5 +1,7 @@
 import numpy as np
 import random
+random.seed(55)
+np.random.seed(55)
 
 # Properties of individuals
 class turtle:
@@ -51,8 +53,10 @@ def create_pop(n, age_range, m_sigma=.01, p_sigma=.01):
 # f_sigma and s_sigma = floats.
 # Parameters used to generate random variation in survival and birth rate for each individual
 
-def simulate_pop(pop, years, m, p, age_classes, r_sigma=0.15):
+def simulate_pop(start_pop, years, m, p, age_classes, r_sigma=0.15, p_sigma=0.01, m_sigma=0.01):
     assert len(m) == len(p) == len(age_classes), "m, p, and age_classes must be of equal length"
+    #copy pop so original is untouched
+    pop = np.copy(start_pop)
     # calculate per-year m and p
     age_class_len = age_classes - np.append([0], age_classes[:-1])
     per_yr_p = p**(1/age_class_len)
@@ -65,6 +69,7 @@ def simulate_pop(pop, years, m, p, age_classes, r_sigma=0.15):
         pop_data[n] = len(pop)
         #figure out if it's a good year or a bad year
         r = np.clip(random.gauss(0, r_sigma), -1, None)  # bound random number to be > -1
+        p_current = per_yr_p * (r + 1)
         #initialize survival array
         pop_surv = np.array([], dtype=bool)
         #for each turtle, figure out survival
@@ -75,9 +80,8 @@ def simulate_pop(pop, years, m, p, age_classes, r_sigma=0.15):
             if which_class >= len(age_classes): #if the first appearance is the last index (100000), then its gonna die
                 pers_p = 0
             else:
-                pers_p = per_yr_p[which_class] + pop[i].pmod
-                #factor in r and cap at 1
-                pers_p = np.clip(pers_p * (r + 1), 0, 1) #bound between 0 and 1 b/c its a probability
+                pers_p = p_current[which_class] * (pop[i].pmod + 1)
+                pers_p = np.clip(pers_p, 0, 1) #bound between 0 and 1 b/c its a probability
 
             #survive
             surv = np.random.choice([True, False], p=[pers_p, 1-pers_p])
@@ -88,8 +92,9 @@ def simulate_pop(pop, years, m, p, age_classes, r_sigma=0.15):
 
         #figure out how many births
         count = np.zeros(len(age_classes), dtype=int)  # initialize array for counting age classes
-        m_current = m * (r + 1)  # yearly m
-        per_yr_m = m_current / age_class_len  # for pulsed-birth type model.
+          # yearly m
+        per_yr_m = m / age_class_len  # for pulsed-birth type model.
+        m_current = per_yr_m * (r + 1)
         for i in range(len(pop)):
             # figure out age-associated fecundity
             # Since birth-rates (m) are not probabilities, I'm not sure how to calculate per year birth-rates and use
@@ -101,7 +106,7 @@ def simulate_pop(pop, years, m, p, age_classes, r_sigma=0.15):
             x = pop[i].age > age_classes
             which_class = np.nonzero(x == False)[0][0]
             count[which_class] = count[which_class] + 1  # populates age class array with counts of turtles
-        births = np.round(np.dot(count, per_yr_m)).astype(np.int)  # round to nearest integer
+        births = np.round(np.dot(count, m_current)).astype(np.int)  # round to nearest integer
         print("Births: " + str(births))
 
         #age
@@ -109,7 +114,7 @@ def simulate_pop(pop, years, m, p, age_classes, r_sigma=0.15):
             pop[i].age = pop[i].age + 1
 
         #give birth
-        pop = np.append(pop, create_pop(n=births, age_range=[0, 0]))
+        pop = np.append(pop, create_pop(n=births, age_range=[0, 0], p_sigma=p_sigma, m_sigma=m_sigma))
 
         #Stop simulating if all individuals are dead
         if len(pop) == 0:
@@ -117,29 +122,3 @@ def simulate_pop(pop, years, m, p, age_classes, r_sigma=0.15):
             break
     return pop_data
 
-
-# birth rates
-m = np.array([0, 0.42, 3.5, 4.3, 4.8])
-# survival rates
-p = np.array([0.76, 0.84, 0.92, 0.95, 0.96])
-
-# age classes:
-# 0-6 years; 0 individuals
-# 7-14 years; 100
-# 15-27 years; 200
-# 28-52 years; 400
-# 53-74 years; 500
-
-classes = np.array([6, 14, 27, 52, 74])
-n_initial = np.array([0, 100, 200, 400, 500])
-class_len = classes - np.append([0], classes[:-1])
-
-
-#turtletown = create_pop(n=10, age_range=[0, 100])
-turtletown = create_pop(n=100, age_range=[7, 14])
-turtletown = np.append(turtletown, create_pop(n=200, age_range=[15, 27]))
-turtletown = np.append(turtletown, create_pop(n=400, age_range=[28, 52]))
-turtletown = np.append(turtletown, create_pop(n=500, age_range=[53, 74]))
-
-test = simulate_pop(turtletown, 100, m=m, p=p, age_classes=classes, r_sigma=0.2)
-print(test)
