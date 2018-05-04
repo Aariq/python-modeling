@@ -1,0 +1,14 @@
+---
+title: "Python Final Project Plots"
+output: html_notebook
+---
+
+Don't know how to make figures in Python yet, but I can export data
+
+```{r}
+library(tidyverse)
+```
+```{r}
+read_csv("test1.csv")
+```
+
